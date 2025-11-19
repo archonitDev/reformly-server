@@ -1,0 +1,21 @@
+{
+  "errors": {
+    "invalid-form": "Invalid form data.",
+    "field-invalid.should-be-string": "The field should be a string.",
+    "field-invalid.should-be-number": "The field should be a number.",
+    "field-invalid.should-be-enum": "The field should be one of the allowed values.",
+    "field-invalid.should-be-email": "The field should be a valid email address.",
+    "field-invalid.should-be-uuid": "The field should be a uuid",
+    "not-authorized.request": "You are not authorized to perform this request.",
+    "invalid-status.user-inactive": "Invalid status: User is inactive.",
+    "auth.not-exists.user": "User does not exist.",
+    "auth.user-already-exists": "User with this email already exists",
+    "auth.user-creation-failed": "User creation failed",
+    "auth.user-is-not-verified": "User is not verified",
+    "auth.user-already-verified": "User already verified",
+    "auth.exit-not-executed": "Exit not executed",
+    "record-already-exist": "Record already exist",
+    "record-creation-failed": "Record creation failed",
+    "not-exists-record": "No record exist"
+  }
+}

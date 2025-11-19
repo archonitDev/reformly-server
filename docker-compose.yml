@@ -1,0 +1,37 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15
+    container_name: postgres
+    restart: always
+    ports:
+      - '5432:5432'
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: reformly-db
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: reformly-api
+    restart: always
+    ports:
+      - '3000:3000'
+    depends_on:
+      - postgres
+    environment:
+      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/reformly-db
+      - APP_PORT=3000
+      - RT_SECRET=rt-secret
+      - AT_SECRET=at-secret
+      - RT_EXPIRES=7d
+      - AT_EXPIRES=15m
+      - APP_LANGUAGE=en
+
+volumes:
+  postgres_data:

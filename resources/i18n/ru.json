@@ -1,0 +1,21 @@
+{
+  "errors": {
+    "invalid-form": "Некорректные данные формы.",
+    "field-invalid.should-be-string": "Поле должно быть строкой.",
+    "field-invalid.should-be-number": "Поле должно быть числом.",
+    "field-invalid.should-be-enum": "Поле должно быть одним из допустимых значений.",
+    "field-invalid.should-be-email": "Поле должно содержать действительный адрес электронной почты.",
+    "field-invalid.should-be-uuid": "Поле должно содержать uuid",
+    "not-authorized.request": "У вас нет прав для выполнения этого запроса.",
+    "invalid-status.user-inactive": "Недопустимый статус: Пользователь неактивен.",
+    "auth.not-exists.user": "Пользователь не существует.",
+    "auth.user-already-exists": "Пользователь с такой почтой уже существует",
+    "auth.user-creation-failed": "Ошибка при создании пользователя",
+    "auth.user-is-not-verified": "Пользователь не верифицирован",
+    "auth.user-already-verified": "Пользователь уже верифицирован",
+    "auth.exit-not-executed": "Выход не выполнен",
+    "record-already-exist": "Запись уже существует",
+    "record-creation-failed": "Создание записи провалено",
+    "not-exists-record": "Запси не существует"
+  }
+}
