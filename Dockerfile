@@ -19,9 +19,6 @@ RUN npx prisma generate
 # Seed the database
 RUN npm run prisma:seed
 
-# Build the project (for TypeScript or frontend assets)
-RUN npm run build
-
 # Expose the application port (Fly.io maps this automatically)
 EXPOSE 3000
 

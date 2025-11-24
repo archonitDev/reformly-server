@@ -13,3 +13,4 @@ export class CompleteWorkoutDto {
   watchedDuration?: number;
 }
 
+
