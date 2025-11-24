@@ -14,6 +14,12 @@ import { APP_GUARD } from '@nestjs/core';
 import { PrismaModule } from '@libs/prisma/prisma.module';
 import { FirebaseModule } from '@libs/firebase/firebase.module';
 import { AccessTokenGuard } from '@libs/security/guards/access-token.guard';
+import { PostsModule } from '@app/posts/posts.module';
+import { CommentsModule } from '@app/comments/comments.module';
+import { LikesModule } from '@app/likes/likes.module';
+import { NotificationsModule } from '@app/notifications/notifications.module';
+import { ProgramsModule } from '@app/programs/programs.module';
+import { WorkoutsModule } from '@app/workouts/workouts.module';
 
 @Module({
   imports: [
@@ -23,6 +29,12 @@ import { AccessTokenGuard } from '@libs/security/guards/access-token.guard';
     SecurityModule,
     PrismaModule,
     FirebaseModule,
+    PostsModule,
+    CommentsModule,
+    LikesModule,
+    NotificationsModule,
+    ProgramsModule,
+    WorkoutsModule,
     ConfigModule.forRoot({
       envFilePath: '.env',
       load: [

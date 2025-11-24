@@ -6,7 +6,21 @@ import { ConfigService } from '@nestjs/config';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
-
+  app.enableCors({
+    origin: true,
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+    allowedHeaders: [
+      'Content-Type',
+      'Authorization',
+      'Accept',
+      'Origin',
+      'X-Requested-With',
+    ],
+    exposedHeaders: ['Authorization'],
+    preflightContinue: false,
+    optionsSuccessStatus: 204,
+  });
   app.useGlobalPipes(new ValidationPipe());
 
   const config = app.get(ConfigService);
@@ -15,7 +29,6 @@ async function bootstrap() {
     .setTitle('Api')
     .setDescription('The API description')
     .setVersion('1.0')
-    .addTag('api')
     .addBearerAuth()
     .build();
 

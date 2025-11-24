@@ -17,14 +17,226 @@ enum Role {
   USER @map("user")
 }
 
+enum MainGoal {
+  LOSE_WEIGHT    @map("lose_weight")
+  FIND_SELF_LOVE @map("find_self_love")
+  BUILD_MUSCLE   @map("build_muscle")
+  KEEP_FIT       @map("keep_fit")
+}
+
+enum Activity {
+  PILATES         @map("pilates")
+  GENERAL_FITNESS @map("general_fitness")
+  YOGA            @map("yoga")
+  WALKING         @map("walking")
+  STRETCHING      @map("stretching")
+}
+
+enum WorkoutCategory {
+  ALL         @map("all")
+  PILATES     @map("pilates")
+  YOGA        @map("yoga")
+  MEDITATION  @map("meditation")
+  HIIT        @map("hiit")
+  STRETCHING  @map("stretching")
+  CARDIO      @map("cardio")
+}
+
+enum NotificationType {
+  POST_LIKED     @map("post_liked")
+  POST_COMMENTED @map("post_commented")
+  COMMENT_LIKED  @map("comment_liked")
+}
+
 model User {
-  id       String  @id @default(uuid()) @db.Uuid
-  name     String
-  lastName String
-  email    String  @unique
-  gender   Gender
-  role     Role
-  hashedRt String?
+  id                  String         @id @default(uuid()) @db.Uuid
+  name                String
+  lastName            String
+  email               String         @unique
+  gender              Gender
+  role                Role
+  hashedRt            String?
+  dateOfBirth         DateTime?
+  mainGoal            MainGoal?
+  activities          Activity[]
+  height              Int? // in cm
+  currentWeight       Float? // in kg
+  goalWeight          Float? // in kg
+  onboardingCompleted Boolean        @default(false)
+  createdAt           DateTime       @default(now())
+  updatedAt           DateTime       @updatedAt
+  
+  // Community relations
+  posts               Post[]
+  comments            Comment[]
+  likes               Like[]
+  notifications       Notification[] @relation("UserNotifications")
+  sentNotifications   Notification[] @relation("NotificationSender")
+  
+  // Workout relations
+  workoutCompletions  WorkoutCompletion[]
+  workoutLikes       WorkoutLike[]
+}
+
+model Post {
+  id        String    @id @default(uuid()) @db.Uuid
+  content   String
+  imageUrl  String?
+  authorId  String    @db.Uuid
+  isPinned  Boolean   @default(false)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  
+  author    User      @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  comments  Comment[]
+  likes     Like[]
+  
+  @@index([authorId])
+  @@index([createdAt])
+}
+
+model Comment {
+  id        String   @id @default(uuid()) @db.Uuid
+  content   String
+  postId    String   @db.Uuid
+  authorId  String   @db.Uuid
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  author    User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  likes     Like[]
+  
+  @@index([postId])
+  @@index([authorId])
+}
+
+model Like {
+  id        String   @id @default(uuid()) @db.Uuid
+  postId    String?  @db.Uuid
+  commentId String?  @db.Uuid
+  userId    String   @db.Uuid
+  createdAt DateTime @default(now())
+  
+  post      Post?    @relation(fields: [postId], references: [id], onDelete: Cascade)
+  comment   Comment? @relation(fields: [commentId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@unique([postId, userId])
+  @@unique([commentId, userId])
+  @@index([postId])
+  @@index([commentId])
+  @@index([userId])
+}
+
+model Notification {
+  id          String           @id @default(uuid()) @db.Uuid
+  type        NotificationType
+  message     String
+  isRead      Boolean          @default(false)
+  userId      String           @db.Uuid
+  senderId    String?          @db.Uuid
+  postId      String?          @db.Uuid
+  commentId   String?          @db.Uuid
+  createdAt   DateTime         @default(now())
+  
+  user        User             @relation("UserNotifications", fields: [userId], references: [id], onDelete: Cascade)
+  sender      User?            @relation("NotificationSender", fields: [senderId], references: [id], onDelete: Cascade)
+  
+  @@index([userId])
+  @@index([createdAt])
+  @@index([isRead])
+}
+
+model WorkoutProgram {
+  id          String    @id @default(uuid()) @db.Uuid
+  title       String
+  description String?
+  category    WorkoutCategory
+  thumbnailUrl String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  
+  workouts    Workout[]
+  
+  @@index([category])
+  @@index([createdAt])
+}
+
+model Workout {
+  id          String    @id @default(uuid()) @db.Uuid
+  programId  String    @db.Uuid
+  title       String
+  description String?
+  thumbnailUrl String?
+  videoUrl    String
+  duration    Int 
+  calories    Int 
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  
+  program     WorkoutProgram @relation(fields: [programId], references: [id], onDelete: Cascade)
+  completions WorkoutCompletion[]
+  likes       WorkoutLike[]
+  equipment   WorkoutEquipment[]
+  
+  @@index([programId])
+  @@index([createdAt])
+}
+
+model WorkoutCompletion {
+  id            String   @id @default(uuid()) @db.Uuid
+  workoutId     String   @db.Uuid
+  userId        String   @db.Uuid
+  completedAt   DateTime @default(now())
+  
+  workout       Workout  @relation(fields: [workoutId], references: [id], onDelete: Cascade)
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@unique([workoutId, userId])
+  @@index([workoutId])
+  @@index([userId])
+  @@index([completedAt])
+}
+
+model WorkoutLike {
+  id        String   @id @default(uuid()) @db.Uuid
+  workoutId String   @db.Uuid
+  userId    String   @db.Uuid
+  createdAt DateTime @default(now())
+  
+  workout   Workout  @relation(fields: [workoutId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@unique([workoutId, userId])
+  @@index([workoutId])
+  @@index([userId])
+}
+
+model Equipment {
+  id          String   @id @default(uuid()) @db.Uuid
+  name        String
+  description String?
+  imageUrl    String?
+  purchaseUrl String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  workouts    WorkoutEquipment[]
+  
+  @@index([name])
+}
+
+model WorkoutEquipment {
+  id          String   @id @default(uuid()) @db.Uuid
+  workoutId   String   @db.Uuid
+  equipmentId String   @db.Uuid
+  createdAt   DateTime @default(now())
+  
+  workout     Workout  @relation(fields: [workoutId], references: [id], onDelete: Cascade)
+  equipment   Equipment @relation(fields: [equipmentId], references: [id], onDelete: Cascade)
+  
+  @@unique([workoutId, equipmentId])
+  @@index([workoutId])
+  @@index([equipmentId])
 }

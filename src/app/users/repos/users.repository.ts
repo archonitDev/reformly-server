@@ -14,22 +14,6 @@ export class UsersRepository {
     return this.prisma.user.findUnique({ where: { id } });
   }
 
-  async findOneByEmail(email: string): Promise<User> {
-    return this.prisma.user.findUnique({ where: { email } });
-  }
-
-  async findOneByEmailAndPassword(
-    email: string,
-    password: string,
-  ): Promise<User> {
-    return this.prisma.user.findUnique({
-      where: {
-        email,
-        password,
-      },
-    });
-  }
-
   async createUser(
     user: Pick<
       User,
@@ -66,6 +50,16 @@ export class UsersRepository {
       data: {
         hashedRt: null,
       },
+    });
+  }
+
+  async updateUser(
+    id: string,
+    data: Prisma.UserUpdateInput,
+  ): Promise<User> {
+    return await this.prisma.user.update({
+      where: { id },
+      data,
     });
   }
 }

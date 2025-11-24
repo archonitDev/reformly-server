@@ -4,11 +4,12 @@ import {
   Logger,
   NotFoundException,
 } from '@nestjs/common';
-import { Gender, Prisma, Role, User } from '@prisma/client';
+import { Gender, Prisma, Role, User, MainGoal, Activity } from '@prisma/client';
 import { UsersRepository } from './repos/users.repository';
 import { ErrorCodes } from '@common/enums/error-codes.enum';
 import * as admin from 'firebase-admin';
 import { parseFullName } from './utils/utils';
+import { OnboardingDto } from './dto/onboarding.dto';
 
 
 const userSelect = {
@@ -18,6 +19,13 @@ const userSelect = {
   lastName: true,
   gender: true,
   role: true,
+  dateOfBirth: true,
+  mainGoal: true,
+  activities: true,
+  height: true,
+  currentWeight: true,
+  goalWeight: true,
+  onboardingCompleted: true,
   createdAt: true,
   updatedAt: true,
 };
@@ -133,6 +141,62 @@ export class UsersService {
 
       this.logger.error(`Failed to update user ${id}:`, error.stack);
       throw new InternalServerErrorException('Failed to update user');
+    }
+  }
+
+  /**
+   * Completes user onboarding by saving all onboarding data
+   * @param userId - User ID
+   * @param onboardingData - Onboarding data from DTO
+   * @returns Updated user entity
+   * @throws NotFoundException if user not found
+   * @throws InternalServerErrorException if update fails
+   */
+  async completeOnboarding(
+    userId: string,
+    onboardingData: OnboardingDto,
+  ): Promise<User> {
+    try {
+      const user = await this.usersRepository.findOneById(userId);
+
+      if (!user) {
+        throw new NotFoundException({
+          message: 'User not found',
+          errorCode: ErrorCodes.NotExists_User,
+        });
+      }
+
+      const updateData: Prisma.UserUpdateInput = {
+        gender: onboardingData.gender,
+        dateOfBirth: new Date(onboardingData.dateOfBirth),
+        mainGoal: onboardingData.mainGoal,
+        activities: {
+          set: onboardingData.activities,
+        },
+        height: onboardingData.height,
+        currentWeight: onboardingData.currentWeight,
+        goalWeight: onboardingData.goalWeight,
+        onboardingCompleted: true,
+      };
+
+      const updatedUser = await this.usersRepository.updateUser(
+        userId,
+        updateData,
+      );
+
+      this.logger.log(`Onboarding completed for user: ${userId}`);
+
+      return updatedUser;
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        throw error;
+      }
+
+      this.logger.error(
+        `Failed to complete onboarding for user ${userId}:`,
+        error.stack,
+      );
+      throw new InternalServerErrorException('Failed to complete onboarding');
     }
   }
 }
