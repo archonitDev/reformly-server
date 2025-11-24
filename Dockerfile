@@ -1,26 +1,29 @@
-# Use a lightweight Node.js image
+# Use a lightweight Node.js base image
 FROM node:20-alpine
 
+# Use the non-root Node.js user provided by the image
+USER node:node
+
 # Set the working directory inside the container
-WORKDIR /app
+WORKDIR /home/node/app
 
-# Copy package.json and lock file first to leverage Docker cache
-COPY package*.json yarn.lock ./
+# Copy dependency manifests first to take advantage of Docker layer caching
+COPY --chown=node:node package*.json ./
 
-# Install dependencies (including devDependencies needed for build)
+# Install all dependencies (including devDependencies required for building)
 RUN npm install
 
-# Copy the entire project
-COPY . .
+# Copy the rest of the application files
+COPY --chown=node:node . .
 
-# Generate Prisma client
+# Generate the Prisma client
 RUN npx prisma generate
 
-# Seed the database
-RUN npm run prisma:seed
+# Optionally seed the database during the build (usually done at runtime)
+# RUN npm run prisma:seed
 
-# Expose the application port (Fly.io maps this automatically)
+# Expose the application port (Fly.io will map external ports automatically)
 EXPOSE 3000
 
-# Run migrations and start the application
+# Run database migrations, then seed, then start the application
 CMD ["sh", "-c", "npx prisma migrate deploy && npm run prisma:seed && npm run start"]
