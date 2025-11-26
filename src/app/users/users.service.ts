@@ -168,6 +168,7 @@ export class UsersService {
 
       const updateData: Prisma.UserUpdateInput = {
         gender: onboardingData.gender,
+        heightUnit: onboardingData.heightUnit,
         dateOfBirth: new Date(onboardingData.dateOfBirth),
         mainGoal: onboardingData.mainGoal,
         activities: {
