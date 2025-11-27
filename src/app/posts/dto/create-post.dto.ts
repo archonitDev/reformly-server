@@ -19,8 +19,12 @@ export class CreatePostDto {
   })
   @IsOptional()
   @IsString()
-  imageUrl?: string;
+  fileUrl?: string;
+
+  @ApiProperty({ type: 'string', format: 'binary', required: false })
+  file?: Express.Multer.File;
 }
+
 
 
 

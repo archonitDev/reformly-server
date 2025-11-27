@@ -169,6 +169,7 @@ export class UsersService {
       const updateData: Prisma.UserUpdateInput = {
         gender: onboardingData.gender,
         heightUnit: onboardingData.heightUnit,
+        weightUnit: onboardingData.weightUnit,
         dateOfBirth: new Date(onboardingData.dateOfBirth),
         mainGoal: onboardingData.mainGoal,
         activities: {
@@ -199,5 +200,18 @@ export class UsersService {
       );
       throw new InternalServerErrorException('Failed to complete onboarding');
     }
+  }
+
+  async deleteUser(id: string) {
+    const user = await this.usersRepository.findOneById(id);
+
+    if (!user) {
+      throw new NotFoundException({
+        message: 'User not found',
+        errorCode: ErrorCodes.NotExists_User,
+      });
+    }
+
+    return this.usersRepository.deleteUser(id);
   }
 }

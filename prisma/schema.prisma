@@ -53,6 +53,11 @@ enum HeightUnit {
   IN @map("in")
 }
 
+enum WeightUnit {
+  KG @map("kg")
+  LB @map("lb")
+}
+
 model User {
   id                  String         @id @default(uuid()) @db.Uuid
   name                String
@@ -66,12 +71,14 @@ model User {
   activities          Activity[]
   height              Int? // in cm
   heightUnit          HeightUnit? @default(CM)
+  weightUnit          WeightUnit? @default(KG)
   currentWeight       Float? // in kg
   goalWeight          Float? // in kg
   onboardingCompleted Boolean        @default(false)
   createdAt           DateTime       @default(now())
   updatedAt           DateTime       @updatedAt
-  
+
+  profilePictureUrl String?
   // Community relations
   posts               Post[]
   comments            Comment[]
@@ -87,7 +94,7 @@ model User {
 model Post {
   id        String    @id @default(uuid()) @db.Uuid
   content   String
-  imageUrl  String?
+  fileUrl  String?
   authorId  String    @db.Uuid
   isPinned  Boolean   @default(false)
   createdAt DateTime  @default(now())
@@ -102,19 +109,24 @@ model Post {
 }
 
 model Comment {
-  id        String   @id @default(uuid()) @db.Uuid
-  content   String
-  postId    String   @db.Uuid
-  authorId  String   @db.Uuid
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id            String   @id @default(uuid()) @db.Uuid
+  content       String
+  postId        String   @db.Uuid
+  authorId      String   @db.Uuid
+  fileUrl       String?
+  parentCommentId String? @db.Uuid
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
   
-  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
-  author    User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
-  likes     Like[]
+  post          Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  author        User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  parentComment Comment? @relation("CommentReplies", fields: [parentCommentId], references: [id], onDelete: Cascade)
+  replies       Comment[] @relation("CommentReplies")
+  likes         Like[]
   
   @@index([postId])
   @@index([authorId])
+  @@index([parentCommentId])
 }
 
 model Like {

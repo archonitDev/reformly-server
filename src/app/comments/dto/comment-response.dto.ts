@@ -24,6 +24,9 @@ export class CommentResponseDto {
   @ApiProperty()
   postId: string;
 
+  @ApiProperty({ required: false })
+  parentCommentId?: string;
+
   @ApiProperty()
   likesCount: number;
 
@@ -32,6 +35,12 @@ export class CommentResponseDto {
 
   @ApiProperty({ type: CommentAuthorDto })
   author: CommentAuthorDto;
+
+  @ApiProperty({ type: [CommentResponseDto], required: false })
+  replies?: CommentResponseDto[];
+
+  @ApiProperty()
+  repliesCount: number;
 
   @ApiProperty()
   createdAt: Date;

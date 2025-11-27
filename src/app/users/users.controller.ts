@@ -1,4 +1,4 @@
-import { Controller, Get, Req, Put, Param, Body, Post, HttpCode, HttpStatus } from '@nestjs/common';
+import { Controller, Get, Req, Put, Param, Body, Post, HttpCode, HttpStatus, Delete } from '@nestjs/common';
 import { UsersService } from './users.service';
 import {
   ApiOperation,
@@ -58,5 +58,10 @@ export class UsersController {
     @Body() onboardingData: OnboardingDto,
   ) {
     return this.usersService.completeOnboarding(user.userId, onboardingData);
+  }
+
+  @Delete(':id')
+  async deleteUser(@Param('id') id: string) {
+    return this.usersService.deleteUser(id);
   }
 }

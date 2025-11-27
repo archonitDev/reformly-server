@@ -9,6 +9,7 @@ import config_i18n from 'configs/i18n.config';
 import config_app from 'configs/app.config';
 import config_security from 'configs/security.config';
 import config_firebase from 'configs/firebase.config';
+import config_storage from 'configs/storage.config';
 import { JwtModule } from '@nestjs/jwt';
 import { APP_GUARD } from '@nestjs/core';
 import { PrismaModule } from '@libs/prisma/prisma.module';
@@ -42,6 +43,7 @@ import { WorkoutsModule } from '@app/workouts/workouts.module';
         config_app,
         config_security,
         config_firebase,
+        config_storage,
       ],
       isGlobal: true,
     }),

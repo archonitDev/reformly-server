@@ -20,6 +20,38 @@ export class PostsRepository {
             name: true,
             lastName: true,
             email: true,
+            createdAt: true,
+            updatedAt: true,
+          },
+        },
+        comments: {
+          select: {
+            id: true,
+            author: {
+              select: {
+                name: true,
+                lastName: true,
+                email: true,
+              },
+            },
+            content: true,
+            replies: {
+              select: {
+                author: {
+                  select: {
+                    name: true,
+                    lastName: true,
+                    email: true,
+                  },
+                },
+                createdAt: true,
+                updatedAt: true,
+                id: true,
+                content: true,
+              },
+            },
+            createdAt: true,
+            updatedAt: true,
           },
         },
         _count: {

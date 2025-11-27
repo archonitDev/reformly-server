@@ -11,7 +11,7 @@ import {
   Max,
   ArrayMaxSize,
 } from 'class-validator';
-import { Gender, MainGoal, Activity, HeightUnit } from '@prisma/client';
+import { Gender, MainGoal, Activity, HeightUnit, WeightUnit } from '@prisma/client';
 
 export class OnboardingDto {
   @ApiProperty({
@@ -21,6 +21,14 @@ export class OnboardingDto {
   })
   @IsEnum(HeightUnit)
   heightUnit: HeightUnit;
+
+  @ApiProperty({
+    description: 'Height unit',
+    enum: HeightUnit,
+    example: HeightUnit.CM,
+  })
+  @IsEnum(HeightUnit)
+  weightUnit: WeightUnit;
 
   @ApiProperty({
     description: 'User gender',

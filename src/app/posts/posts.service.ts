@@ -3,15 +3,24 @@ import { PostsRepository } from './repos/posts.repository';
 import { CreatePostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
 import { Post, Prisma } from '@prisma/client';
+import { StorageService } from '@libs/storage/storage.service';
 
 @Injectable()
 export class PostsService {
-  constructor(private postsRepository: PostsRepository) {}
+  constructor(private postsRepository: PostsRepository, private storageService: StorageService) {}
 
-  async create(userId: string, createPostDto: CreatePostDto): Promise<Post> {
+  async create(userId: string, createPostDto: CreatePostDto, file: Express.Multer.File): Promise<Post> {
+    if (file) {
+      const { url } = await this.storageService.uploadObject({
+        key: `posts/${userId}/${file.originalname.replace(' ', '_')}`,
+        body: file.buffer,
+        contentType: file.mimetype,
+      });
+      createPostDto.fileUrl = url;
+    }
     const post = await this.postsRepository.create({
       content: createPostDto.content,
-      imageUrl: createPostDto.imageUrl,
+      fileUrl: createPostDto.fileUrl,
       author: {
         connect: { id: userId },
       },
@@ -51,7 +60,7 @@ export class PostsService {
     };
   }
 
-  async findOne(id: string, userId: string): Promise<Post> {
+  async findOne(id: string): Promise<Post> {
     const post = await this.postsRepository.findById(id);
 
     if (!post) {
