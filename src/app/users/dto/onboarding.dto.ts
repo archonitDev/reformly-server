@@ -23,11 +23,11 @@ export class OnboardingDto {
   heightUnit: HeightUnit;
 
   @ApiProperty({
-    description: 'Height unit',
-    enum: HeightUnit,
-    example: HeightUnit.CM,
+    description: ' unit',
+    enum: WeightUnit,
+    example: WeightUnit.KG,
   })
-  @IsEnum(HeightUnit)
+  @IsEnum(WeightUnit)
   weightUnit: WeightUnit;
 
   @ApiProperty({
