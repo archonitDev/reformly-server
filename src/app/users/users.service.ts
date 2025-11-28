@@ -145,6 +145,27 @@ export class UsersService {
   }
 
   /**
+   * Calculates BMI (Body Mass Index) using metric formula
+   * BMI = weight_kg / (height_m²)
+   * @param weightKg - Weight in kilograms
+   * @param heightCm - Height in centimeters
+   * @returns BMI value or null if inputs are invalid
+   */
+  private calculateBMI(weightKg: number, heightCm: number): number | null {
+    if (!weightKg || !heightCm || weightKg <= 0 || heightCm <= 0) {
+      return null;
+    }
+
+    // Convert height from cm to meters
+    const heightMeters = heightCm / 100;
+    
+    // Calculate BMI: weight (kg) / height (m)²
+    const bmi = weightKg / (heightMeters * heightMeters);
+    
+    return Math.round(bmi * 100) / 100; // Round to 2 decimal places
+  }
+
+  /**
    * Completes user onboarding by saving all onboarding data
    * @param userId - User ID
    * @param onboardingData - Onboarding data from DTO
@@ -166,6 +187,11 @@ export class UsersService {
         });
       }
 
+      const bmi = this.calculateBMI(
+        onboardingData.currentWeight,
+        onboardingData.height,
+      );
+
       const updateData: Prisma.UserUpdateInput = {
         gender: onboardingData.gender,
         heightUnit: onboardingData.heightUnit,
@@ -176,6 +202,7 @@ export class UsersService {
           set: onboardingData.activities,
         },
         height: onboardingData.height,
+        bmi,
         currentWeight: onboardingData.currentWeight,
         goalWeight: onboardingData.goalWeight,
         onboardingCompleted: true,
@@ -185,8 +212,6 @@ export class UsersService {
         userId,
         updateData,
       );
-
-      this.logger.log(`Onboarding completed for user: ${userId}`);
 
       return updatedUser;
     } catch (error) {

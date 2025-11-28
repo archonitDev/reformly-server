@@ -71,6 +71,7 @@ model User {
   activities          Activity[]
   height              Int? // in cm
   heightUnit          HeightUnit? @default(CM)
+  bmi                 Float?
   weightUnit          WeightUnit? @default(KG)
   currentWeight       Float? // in kg
   goalWeight          Float? // in kg
