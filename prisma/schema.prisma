@@ -79,6 +79,10 @@ model User {
   createdAt           DateTime       @default(now())
   updatedAt           DateTime       @updatedAt
 
+  exerciseRemindersNotifications Boolean        @default(false)
+  likesNotifications             Boolean        @default(false)
+  commentsNotifications          Boolean        @default(false)
+
   profilePictureUrl String?
   // Community relations
   posts               Post[]

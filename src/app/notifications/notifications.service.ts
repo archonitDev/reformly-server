@@ -3,20 +3,47 @@ import { NotificationsRepository } from './repos/notifications.repository';
 import { NotificationResponseDto } from './dto/notification-response.dto';
 import { NotificationType } from '@prisma/client';
 import { PrismaService } from '@libs/prisma/prisma.service';
+import { ConfigService } from '@nestjs/config';
+import * as firebase from 'firebase-admin';
 
 @Injectable()
 export class NotificationsService {
   constructor(
     private notificationsRepository: NotificationsRepository,
+    private readonly configService: ConfigService,
     private prisma: PrismaService,
-  ) {}
+  ) {
+    const firebaseCredentials = this.configService.get('firebase.credential');
+    firebase.initializeApp({
+      credential: firebase.credential.cert(firebaseCredentials),
+      databaseURL: this.configService.get('firebase.databaseURL'),
+    });
+  }
+
+  async sendPushNotification(token: string, title: string, body: string) {
+    const message = {
+      notification: {
+        title,
+        body,
+      },
+      token,
+    };
+
+    try {
+      await firebase.messaging().send(message);
+    } catch (error) {
+      console.log('error', error);
+    }
+  }
 
   async createLikeNotification(
     userId: string,
     senderId: string,
     postId: string,
   ): Promise<NotificationResponseDto> {
-    const sender = await this.prisma.user.findUnique({ where: { id: senderId } });
+    const sender = await this.prisma.user.findUnique({
+      where: { id: senderId },
+    });
 
     const notification = await this.notificationsRepository.create({
       type: NotificationType.POST_LIKED,
@@ -39,7 +66,9 @@ export class NotificationsService {
     postId: string,
     commentId: string,
   ): Promise<NotificationResponseDto> {
-    const sender = await this.prisma.user.findUnique({ where: { id: senderId } });
+    const sender = await this.prisma.user.findUnique({
+      where: { id: senderId },
+    });
 
     const notification = await this.notificationsRepository.create({
       type: NotificationType.POST_COMMENTED,
@@ -63,7 +92,9 @@ export class NotificationsService {
     postId: string,
     commentId: string,
   ): Promise<NotificationResponseDto> {
-    const sender = await this.prisma.user.findUnique({ where: { id: senderId } });
+    const sender = await this.prisma.user.findUnique({
+      where: { id: senderId },
+    });
 
     const notification = await this.notificationsRepository.create({
       type: NotificationType.COMMENT_LIKED,
@@ -96,13 +127,19 @@ export class NotificationsService {
     const skip = (page - 1) * limit;
 
     const [notifications, total, unreadCount] = await Promise.all([
-      this.notificationsRepository.findByUserId(userId, { skip, take: limit, isRead }),
+      this.notificationsRepository.findByUserId(userId, {
+        skip,
+        take: limit,
+        isRead,
+      }),
       this.notificationsRepository.count(userId, isRead),
       this.notificationsRepository.count(userId, false),
     ]);
 
     return {
-      notifications: notifications.map((notification) => this.mapToResponseDto(notification)),
+      notifications: notifications.map((notification) =>
+        this.mapToResponseDto(notification),
+      ),
       total,
       unreadCount,
       page,
@@ -110,7 +147,10 @@ export class NotificationsService {
     };
   }
 
-  async markAsRead(id: string, userId: string): Promise<NotificationResponseDto> {
+  async markAsRead(
+    id: string,
+    userId: string,
+  ): Promise<NotificationResponseDto> {
     const notification = await this.notificationsRepository.findById(id);
 
     if (!notification) {
@@ -121,7 +161,8 @@ export class NotificationsService {
       throw new NotFoundException('Notification not found');
     }
 
-    const updatedNotification = await this.notificationsRepository.markAsRead(id);
+    const updatedNotification =
+      await this.notificationsRepository.markAsRead(id);
 
     return this.mapToResponseDto(updatedNotification);
   }

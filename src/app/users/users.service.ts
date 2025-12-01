@@ -10,6 +10,7 @@ import { ErrorCodes } from '@common/enums/error-codes.enum';
 import * as admin from 'firebase-admin';
 import { parseFullName } from './utils/utils';
 import { OnboardingDto } from './dto/onboarding.dto';
+import { StorageService } from '@libs/storage/storage.service';
 
 
 const userSelect = {
@@ -34,7 +35,28 @@ const userSelect = {
 export class UsersService {
   private readonly logger = new Logger(UsersService.name);
 
-  constructor(private readonly usersRepository: UsersRepository) {}
+  constructor(private readonly usersRepository: UsersRepository, private readonly storageService: StorageService) {}
+
+  async updateProfilePicture(id: string, file: Express.Multer.File) {
+    const user = await this.usersRepository.findOneById(id);
+
+    if (!user) {
+      throw new NotFoundException({
+        message: 'User not found',
+        errorCode: ErrorCodes.NotExists_User,
+      });
+    }
+
+    const { url } = await this.storageService.uploadObject({
+      key: `users/${id}/${file.originalname.replace(' ', '_')}`,
+      body: file.buffer,
+      contentType: file.mimetype,
+    });
+
+    await this.usersRepository.updateUser(id, { profilePictureUrl: url });
+
+    return url;
+  }
 
   async findById(id: string) {
     const user = await this.usersRepository.findUnique({ id }, userSelect);
@@ -130,7 +152,8 @@ export class UsersService {
           errorCode: ErrorCodes.NotExists_User,
         });
       }
-      //TODO: Update user
+      await this.usersRepository.updateUser(id, updateData);
+
       const updatedUser = await this.usersRepository.findOneById(id);
 
       return updatedUser;

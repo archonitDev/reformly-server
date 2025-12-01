@@ -1,4 +1,4 @@
-import { Controller, Get, Req, Put, Param, Body, Post, HttpCode, HttpStatus, Delete } from '@nestjs/common';
+import { Controller, Get, Req, Put, Param, Body, Post, HttpCode, HttpStatus, Delete, UploadedFile, UseInterceptors } from '@nestjs/common';
 import { UsersService } from './users.service';
 import {
   ApiOperation,
@@ -6,11 +6,15 @@ import {
   ApiTags,
   ApiBearerAuth,
   ApiBody,
+  ApiConsumes,
 } from '@nestjs/swagger';
-import { Prisma } from '@prisma/client';
 import { OnboardingDto } from './dto/onboarding.dto';
 import { GetCurrentUser } from '@libs/security/decorators/get-current-user.decorator';
 import { AuthUser } from '@common/interfaces/auth-user.interface';
+import { UserDto } from './dto/user.dto';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { memoryStorage } from 'multer';
+import { NotificationSettingsDto } from './dto/notification-settings.dto';
 
 @ApiTags('Users')
 @ApiBearerAuth()
@@ -18,27 +22,42 @@ import { AuthUser } from '@common/interfaces/auth-user.interface';
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
+  @Post('profile-picture')
+  @ApiOperation({ summary: 'Update user profile picture' })
+  @ApiResponse({ status: 201, description: 'Profile picture updated successfully' })
+  @ApiConsumes('multipart/form-data')
+  @UseInterceptors(
+    FileInterceptor('image', {
+      storage: memoryStorage(),
+      limits: { fileSize: 200 * 1024 * 1024 },
+    }),
+  )
+  updateProfilePicture(
+    @Param('id') id: string,
+    @UploadedFile() file: Express.Multer.File,
+  ) {
+    return this.usersService.updateProfilePicture(id, file);
+  }
+
+  @Post('notification-settings')
+  @ApiOperation({ summary: 'Edit notification settings' })
+  @ApiResponse({ status: 201, description: 'Notification settings updated successfully' })
+  @ApiBody({ type: NotificationSettingsDto })
+  editNotificationSettings(
+    @Param('id') id: string,
+    @Body() notificationSettings: NotificationSettingsDto,
+  ) {
+    return this.usersService.updateUser(id, notificationSettings);
+  }
 
   @ApiOperation({ summary: 'Update user information' })
   @ApiResponse({
     status: 200,
     description: 'User information updated successfully',
   })
-  @ApiBody({
-    schema: {
-      type: 'object',
-      properties: {
-        name: { type: 'string' },
-        lastName: { type: 'string' },
-        gender: { type: 'string' },
-      },
-    },
-  })
+  @ApiBody({ type: UserDto })
   @Put(':id')
-  async updateUser(
-    @Param('id') id: string,
-    @Body() updateData: Prisma.UserUpdateInput,
-  ) {
+  async updateUser(@Param('id') id: string, @Body() updateData: UserDto) {
     return this.usersService.updateUser(id, updateData);
   }
 

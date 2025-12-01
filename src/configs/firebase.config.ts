@@ -7,6 +7,7 @@ export default registerAs('firebase', () => {
     FIREBASE_PRIVATE_KEY: Joi.string().required(),
     FIREBASE_CLIENT_EMAIL: Joi.string().email().required(),
     FIREBASE_DATABASE_URL: Joi.string().uri().required(),
+    FIREBASE_CREDENTIAL_JSON: Joi.string().required(),
   }).unknown();
 
   const { value: envVars, error } = envVarsSchema
@@ -22,5 +23,6 @@ export default registerAs('firebase', () => {
     privateKey: envVars.FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n'),
     clientEmail: envVars.FIREBASE_CLIENT_EMAIL,
     databaseURL: envVars.FIREBASE_DATABASE_URL,
+    credential: JSON.parse(envVars.FIREBASE_CREDENTIAL_JSON),
   };
 });
