@@ -1,6 +1,6 @@
 import { PrismaService } from '@libs/prisma/prisma.service';
 import { Injectable } from '@nestjs/common';
-import { Workout, Prisma } from '@prisma/client';
+import { Prisma } from '@prisma/client';
 
 @Injectable()
 export class WorkoutsRepository {

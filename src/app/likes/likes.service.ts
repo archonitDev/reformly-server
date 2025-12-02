@@ -3,6 +3,8 @@ import { LikesRepository } from './repos/likes.repository';
 import { LikeResponseDto } from './dto/like-response.dto';
 import { NotificationsService } from '@app/notifications/notifications.service';
 import { PrismaService } from '@libs/prisma/prisma.service';
+import { LeaderboardService } from '@app/leaderboard/leaderboard.service';
+import { PointSource } from '@prisma/client';
 
 @Injectable()
 export class LikesService {
@@ -10,10 +12,10 @@ export class LikesService {
     private likesRepository: LikesRepository,
     private notificationsService: NotificationsService,
     private prisma: PrismaService,
+    private leaderboardService: LeaderboardService,
   ) {}
 
   async togglePostLike(postId: string, userId: string): Promise<{ liked: boolean; likesCount: number }> {
-    // Check if post exists
     const post = await this.prisma.post.findUnique({ where: { id: postId } });
     if (!post) {
       throw new NotFoundException('Post not found');
@@ -25,15 +27,33 @@ export class LikesService {
       // Unlike
       await this.likesRepository.deletePostLike(postId, userId);
       const likesCount = await this.likesRepository.countPostLikes(postId);
+
+      if (post.authorId !== userId) {
+        await this.leaderboardService.recordPoints(
+          post.authorId,
+          -1,
+          PointSource.POST_LIKED,
+        );
+      }
+
       return { liked: false, likesCount };
     } else {
-      // Like
       await this.likesRepository.createPostLike(postId, userId);
       const likesCount = await this.likesRepository.countPostLikes(postId);
 
-      // Create notification for post author (if not liking own post)
       if (post.authorId !== userId) {
-        await this.notificationsService.createLikeNotification(post.authorId, userId, postId);
+        await Promise.all([
+          this.notificationsService.createLikeNotification(
+            post.authorId,
+            userId,
+            postId,
+          ),
+          this.leaderboardService.recordPoints(
+            post.authorId,
+            1,
+            PointSource.POST_LIKED,
+          ),
+        ]);
       }
 
       return { liked: true, likesCount };
@@ -41,7 +61,6 @@ export class LikesService {
   }
 
   async toggleCommentLike(commentId: string, userId: string): Promise<{ liked: boolean; likesCount: number }> {
-    // Check if comment exists
     const comment = await this.prisma.comment.findUnique({ where: { id: commentId } });
     if (!comment) {
       throw new NotFoundException('Comment not found');
@@ -53,20 +72,34 @@ export class LikesService {
       // Unlike
       await this.likesRepository.deleteCommentLike(commentId, userId);
       const likesCount = await this.likesRepository.countCommentLikes(commentId);
+
+      if (comment?.authorId && comment?.authorId !== userId) {
+        await this.leaderboardService.recordPoints(
+          comment.authorId,
+          -1,
+          PointSource.COMMENT_LIKED,
+        );
+      }
+
       return { liked: false, likesCount };
     } else {
-      // Like
       await this.likesRepository.createCommentLike(commentId, userId);
       const likesCount = await this.likesRepository.countCommentLikes(commentId);
 
-      // Create notification for comment author (if not liking own comment)
-      if (comment.authorId !== userId) {
-        await this.notificationsService.createCommentLikeNotification(
-          comment.authorId,
-          userId,
-          comment.postId,
-          commentId,
-        );
+      if (comment?.authorId && comment?.authorId !== userId) {
+        await Promise.all([
+          this.notificationsService.createCommentLikeNotification(
+            comment.authorId,
+            userId,
+            comment.postId,
+            commentId,
+          ),
+          this.leaderboardService.recordPoints(
+            comment.authorId,
+            1,
+            PointSource.COMMENT_LIKED,
+          ),
+        ]);
       }
 
       return { liked: true, likesCount };

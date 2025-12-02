@@ -1,10 +1,11 @@
-import { Controller, Get, Req, Put, Param, Body, Post, HttpCode, HttpStatus, Delete, UploadedFile, UseInterceptors } from '@nestjs/common';
+import { Controller, Put, Param, Body, Post, HttpCode, HttpStatus, Delete, UploadedFile, UseInterceptors } from '@nestjs/common';
 import { UsersService } from './users.service';
 import {
   ApiOperation,
   ApiResponse,
   ApiTags,
   ApiBearerAuth,
+  ApiParam,
   ApiBody,
   ApiConsumes,
 } from '@nestjs/swagger';
@@ -79,6 +80,11 @@ export class UsersController {
     return this.usersService.completeOnboarding(user.userId, onboardingData);
   }
 
+
+  @ApiOperation({ summary: 'Delete user' })
+  @ApiResponse({ status: 200, description: 'User deleted successfully' })
+  @ApiResponse({ status: 404, description: 'User not found' })
+  @ApiParam({ name: 'id', description: 'User ID' })
   @Delete(':id')
   async deleteUser(@Param('id') id: string) {
     return this.usersService.deleteUser(id);

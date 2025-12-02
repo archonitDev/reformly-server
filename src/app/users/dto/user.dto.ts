@@ -25,6 +25,20 @@ export class UserDto {
   gender: Gender;
 
   @ApiProperty({
+    description: 'User Username',
+  })
+  @IsString()
+  @IsNotEmpty()
+  username: string;
+
+  @ApiProperty({
+    description: 'User Bio',
+  })
+  @IsString()
+  @IsNotEmpty()
+  bio: string;
+
+  @ApiProperty({
     description: 'User Date of Birth',
   })
   @IsDateString()

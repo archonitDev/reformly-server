@@ -48,6 +48,13 @@ enum NotificationType {
   COMMENT_LIKED  @map("comment_liked")
 }
 
+enum PointSource {
+  POST_LIKED       @map("post_liked")
+  COMMENT_ON_POST  @map("comment_on_post")
+  COMMENT_LIKED    @map("comment_liked")
+  COMMENT_REPLY    @map("comment_reply")
+}
+
 enum HeightUnit {
   CM @map("cm")
   IN @map("in")
@@ -59,41 +66,59 @@ enum WeightUnit {
 }
 
 model User {
-  id                  String         @id @default(uuid()) @db.Uuid
+  id                  String            @id @default(uuid()) @db.Uuid
   name                String
   lastName            String
-  email               String         @unique
+  email               String            @unique
   gender              Gender
   role                Role
   hashedRt            String?
   dateOfBirth         DateTime?
+  username            String?           @unique
+  bio                 String?
   mainGoal            MainGoal?
   activities          Activity[]
   height              Int? // in cm
-  heightUnit          HeightUnit? @default(CM)
+  heightUnit          HeightUnit?       @default(CM)
   bmi                 Float?
-  weightUnit          WeightUnit? @default(KG)
+  weightUnit          WeightUnit?       @default(KG)
   currentWeight       Float? // in kg
   goalWeight          Float? // in kg
-  onboardingCompleted Boolean        @default(false)
-  createdAt           DateTime       @default(now())
-  updatedAt           DateTime       @updatedAt
+  onboardingCompleted Boolean           @default(false)
+  createdAt           DateTime          @default(now())
+  updatedAt           DateTime          @updatedAt
 
-  exerciseRemindersNotifications Boolean        @default(false)
-  likesNotifications             Boolean        @default(false)
-  commentsNotifications          Boolean        @default(false)
+  exerciseRemindersNotifications Boolean           @default(false)
+  likesNotifications             Boolean           @default(false)
+  commentsNotifications          Boolean           @default(false)
 
   profilePictureUrl String?
+  // Gamification
+  totalPoints         Int                @default(0)
+  pointsHistory       UserPoint[]
+
   // Community relations
   posts               Post[]
   comments            Comment[]
   likes               Like[]
-  notifications       Notification[] @relation("UserNotifications")
-  sentNotifications   Notification[] @relation("NotificationSender")
+  notifications       Notification[]     @relation("UserNotifications")
+  sentNotifications   Notification[]     @relation("NotificationSender")
   
   // Workout relations
   workoutCompletions  WorkoutCompletion[]
-  workoutLikes       WorkoutLike[]
+  workoutLikes        WorkoutLike[]
+}
+
+model UserPoint {
+  id        String      @id @default(uuid()) @db.Uuid
+  userId    String      @db.Uuid
+  delta     Int
+  source    PointSource
+  createdAt DateTime    @default(now())
+
+  user      User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
 }
 
 model Post {

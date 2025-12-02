@@ -7,9 +7,10 @@ import { NotificationsModule } from '@app/notifications/notifications.module';
 import { LikesModule } from '@app/likes/likes.module';
 import { PostsService } from '@app/posts/posts.service';
 import { PostsModule } from '@app/posts/posts.module';
+import { LeaderboardModule } from '@app/leaderboard/leaderboard.module';
 
 @Module({
-  imports: [PrismaModule, NotificationsModule, LikesModule, PostsModule],
+  imports: [PrismaModule, NotificationsModule, LikesModule, PostsModule, LeaderboardModule],
   controllers: [CommentsController],
   providers: [CommentsService, CommentsRepository],
   exports: [CommentsService, CommentsRepository],

@@ -21,6 +21,7 @@ import { LikesModule } from '@app/likes/likes.module';
 import { NotificationsModule } from '@app/notifications/notifications.module';
 import { ProgramsModule } from '@app/programs/programs.module';
 import { WorkoutsModule } from '@app/workouts/workouts.module';
+import { LeaderboardModule } from '@app/leaderboard/leaderboard.module';
 
 @Module({
   imports: [
@@ -36,6 +37,7 @@ import { WorkoutsModule } from '@app/workouts/workouts.module';
     NotificationsModule,
     ProgramsModule,
     WorkoutsModule,
+    LeaderboardModule,
     ConfigModule.forRoot({
       envFilePath: '.env',
       load: [

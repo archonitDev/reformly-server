@@ -42,13 +42,12 @@ export class WorkoutsService {
     page: number = 1,
     limit: number = 20,
   ): Promise<{
-    workoutsWithProgress: WorkoutResponseDto[];
+    data: WorkoutResponseDto[];
     total: number;
     page: number;
     totalPages: number;
   }> {
     const skip = (page - 1) * limit;
-
     const allLikedWorkouts = await this.workoutLikesRepository.findByUser(userId);
     const total = allLikedWorkouts.length;
     const likedWorkouts = allLikedWorkouts.slice(skip, skip + limit);
@@ -76,7 +75,7 @@ export class WorkoutsService {
     
 
     return {
-      workoutsWithProgress,
+      data: workoutsWithProgress,
       total,
       page,
       totalPages: Math.ceil(total / limit),

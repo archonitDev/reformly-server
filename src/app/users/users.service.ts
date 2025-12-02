@@ -27,6 +27,8 @@ const userSelect = {
   currentWeight: true,
   goalWeight: true,
   onboardingCompleted: true,
+  profilePictureUrl: true,
+  totalPoints: true,
   createdAt: true,
   updatedAt: true,
 };

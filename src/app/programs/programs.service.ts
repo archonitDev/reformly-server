@@ -60,8 +60,9 @@ export class ProgramsService {
             ? Math.round((completedWorkouts / workoutCount) * 100)
             : 0;
 
+        const { _count, ...programWithoutCount} = program;
         return {
-          ...program,
+          ...programWithoutCount,
           workoutCount,
           completedWorkouts,
           progressPercentage,
@@ -98,7 +99,7 @@ export class ProgramsService {
         : 0;
 
 
-    const programWithProgress = workouts.map(async (workout) => {
+    const programWithProgress = await Promise.all(workouts.map(async (workout) => {
       const [isLiked, completion] = await Promise.all([
         this.workoutLikesRepository.findByWorkoutAndUser(workout.id, userId),
         this.workoutCompletionsRepository.findByWorkoutAndUser(workout.id, userId),
@@ -109,7 +110,7 @@ export class ProgramsService {
         isLiked: !!isLiked,
         isCompleted: !!completion,
       };
-    });
+    }));
 
     return {
       id: program.id,

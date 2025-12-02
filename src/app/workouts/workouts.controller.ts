@@ -20,15 +20,8 @@ import { WorkoutResponseDto } from './dto/workout-response.dto';
 export class WorkoutsController {
   constructor(private readonly workoutsService: WorkoutsService) {}
 
-  @Get(':id')
-  @ApiOperation({ summary: 'Get a workout by ID' })
-  @ApiResponse({ status: 200, description: 'Workout retrieved successfully', type: WorkoutResponseDto })
-  getWorkoutById(@Param('id') id: string, @GetCurrentUser() user: AuthUser) {
-    return this.workoutsService.getWorkoutById(id, user.userId);
-  }
-
   @Get('liked')
-  @ApiOperation({ summary: 'Get user\'s liked/favorited workouts' })
+  @ApiOperation({ summary: "Get user's liked/favorited workouts" })
   @ApiResponse({
     status: 200,
     description: 'Liked workouts retrieved successfully',
@@ -41,7 +34,22 @@ export class WorkoutsController {
     @Query('page') page?: number,
     @Query('limit') limit?: number,
   ) {
-    return this.workoutsService.getLikedWorkouts(user.userId, page ? +page : 1, limit ? +limit : 20);
+    return this.workoutsService.getLikedWorkouts(
+      user.userId,
+      page ? +page : 1,
+      limit ? +limit : 20,
+    );
+  }
+  
+  @Get(':id')
+  @ApiOperation({ summary: 'Get a workout by ID' })
+  @ApiResponse({
+    status: 200,
+    description: 'Workout retrieved successfully',
+    type: WorkoutResponseDto,
+  })
+  getWorkoutById(@Param('id') id: string, @GetCurrentUser() user: AuthUser) {
+    return this.workoutsService.getWorkoutById(id, user.userId);
   }
 
   @Post(':id/like')
@@ -56,10 +64,7 @@ export class WorkoutsController {
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Mark a workout as complete' })
   @ApiResponse({ status: 200, description: 'Workout marked as complete' })
-  completeWorkout(
-    @Param('id') id: string,
-    @GetCurrentUser() user: AuthUser,
-  ) {
+  completeWorkout(@Param('id') id: string, @GetCurrentUser() user: AuthUser) {
     return this.workoutsService.completeWorkout(id, user.userId);
   }
 }

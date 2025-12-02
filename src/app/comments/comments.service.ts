@@ -3,8 +3,9 @@ import { CommentsRepository } from './repos/comments.repository';
 import { CreateCommentDto } from './dto/create-comment.dto';
 import { UpdateCommentDto } from './dto/update-comment.dto';
 import { NotificationsService } from '@app/notifications/notifications.service';
-import { Comment } from '@prisma/client';
+import { Comment, PointSource } from '@prisma/client';
 import { PostsService } from '@app/posts/posts.service';
+import { LeaderboardService } from '@app/leaderboard/leaderboard.service';
 
 @Injectable()
 export class CommentsService {
@@ -12,6 +13,7 @@ export class CommentsService {
     private commentsRepository: CommentsRepository,
     private notificationsService: NotificationsService,
     private postService: PostsService,
+    private leaderboardService: LeaderboardService,
   ) {}
 
 
@@ -38,12 +40,19 @@ export class CommentsService {
     });
 
     if (post?.authorId && post?.authorId !== userId) {
-      await this.notificationsService.createCommentNotification(
-        post?.authorId,
-        userId,
-        postId,
-        comment.id,
-      );
+      await Promise.all([
+        this.notificationsService.createCommentNotification(
+          post.authorId,
+          userId,
+          postId,
+          comment.id,
+        ),
+        this.leaderboardService.recordPoints(
+          post.authorId,
+          1,
+          PointSource.COMMENT_ON_POST,
+        ),
+      ]);
     }
 
     return comment;
@@ -83,12 +92,19 @@ export class CommentsService {
     });
 
     if (parentComment.authorId !== userId) {
-      await this.notificationsService.createCommentNotification(
-        parentComment.authorId,
-        userId,
-        postId,
-        comment.id,
-      );
+      await Promise.all([
+        this.notificationsService.createCommentNotification(
+          parentComment.authorId,
+          userId,
+          postId,
+          comment.id,
+        ),
+        this.leaderboardService.recordPoints(
+          parentComment.authorId,
+          1,
+          PointSource.COMMENT_REPLY,
+        ),
+      ]);
     }
 
     return comment;
