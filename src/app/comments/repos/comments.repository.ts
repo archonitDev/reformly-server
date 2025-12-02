@@ -64,13 +64,13 @@ export class CommentsRepository {
         author: {
           select: this.authorSelect,
         },
-        replies: {
-          include: {
-            author: {select: this.authorSelect}, 
-            _count: {select: this.countSelect}
-          },
-          orderBy: { createdAt: 'asc' },
-        },
+        // replies: {
+        //   include: {
+        //     author: {select: this.authorSelect}, 
+        //     _count: {select: this.countSelect}
+        //   },
+        //   orderBy: { createdAt: 'asc' },
+        // },
         _count: {
           select: this.countSelect,
         },
