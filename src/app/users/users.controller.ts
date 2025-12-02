@@ -16,6 +16,7 @@ import { UserDto } from './dto/user.dto';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { memoryStorage } from 'multer';
 import { NotificationSettingsDto } from './dto/notification-settings.dto';
+import { UpdateUserImageDto } from './dto/update-user-image.dto';
 
 @ApiTags('Users')
 @ApiBearerAuth()
@@ -25,7 +26,10 @@ export class UsersController {
 
   @Post('profile-picture')
   @ApiOperation({ summary: 'Update user profile picture' })
-  @ApiResponse({ status: 201, description: 'Profile picture updated successfully' })
+  @ApiResponse({
+    status: 201,
+    description: 'Profile picture updated successfully',
+  })
   @ApiConsumes('multipart/form-data')
   @UseInterceptors(
     FileInterceptor('image', {
@@ -34,15 +38,19 @@ export class UsersController {
     }),
   )
   updateProfilePicture(
-    @Param('id') id: string,
+    @GetCurrentUser() user: AuthUser,
+    @Body() updateUserImageDto: UpdateUserImageDto,
     @UploadedFile() file: Express.Multer.File,
   ) {
-    return this.usersService.updateProfilePicture(id, file);
+    return this.usersService.updateProfilePicture(user.userId, file);
   }
 
   @Post('notification-settings')
   @ApiOperation({ summary: 'Edit notification settings' })
-  @ApiResponse({ status: 201, description: 'Notification settings updated successfully' })
+  @ApiResponse({
+    status: 201,
+    description: 'Notification settings updated successfully',
+  })
   @ApiBody({ type: NotificationSettingsDto })
   editNotificationSettings(
     @Param('id') id: string,
@@ -57,9 +65,11 @@ export class UsersController {
     description: 'User information updated successfully',
   })
   @ApiBody({ type: UserDto })
-  @Put(':id')
-  async updateUser(@Param('id') id: string, @Body() updateData: UserDto) {
-    return this.usersService.updateUser(id, updateData);
+  async updateUser(
+    @GetCurrentUser() user: AuthUser,
+    @Body() updateData: UserDto,
+  ) {
+    return this.usersService.updateUser(user.userId, updateData);
   }
 
   @Post('finish-onboarding')
@@ -79,7 +89,6 @@ export class UsersController {
   ) {
     return this.usersService.completeOnboarding(user.userId, onboardingData);
   }
-
 
   @ApiOperation({ summary: 'Delete user' })
   @ApiResponse({ status: 200, description: 'User deleted successfully' })
