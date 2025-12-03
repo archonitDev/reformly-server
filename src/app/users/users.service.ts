@@ -13,7 +13,7 @@ import { OnboardingDto } from './dto/onboarding.dto';
 import { StorageService } from '@libs/storage/storage.service';
 
 
-const userSelect = {
+const userSelect: Prisma.UserSelect = {
   id: true,
   email: true,
   name: true,
@@ -28,6 +28,7 @@ const userSelect = {
   goalWeight: true,
   onboardingCompleted: true,
   profilePictureUrl: true,
+  bmi: true,
   totalPoints: true,
   createdAt: true,
   updatedAt: true,

@@ -16,7 +16,6 @@ import { UserDto } from './dto/user.dto';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { memoryStorage } from 'multer';
 import { NotificationSettingsDto } from './dto/notification-settings.dto';
-import { UpdateUserImageDto } from './dto/update-user-image.dto';
 
 @ApiTags('Users')
 @ApiBearerAuth()
@@ -30,6 +29,7 @@ export class UsersController {
     status: 201,
     description: 'Profile picture updated successfully',
   })
+  @ApiBody({ schema: { type: 'object', properties: { image: { type: 'string', format: 'binary' } } } })
   @ApiConsumes('multipart/form-data')
   @UseInterceptors(
     FileInterceptor('image', {
@@ -39,7 +39,6 @@ export class UsersController {
   )
   updateProfilePicture(
     @GetCurrentUser() user: AuthUser,
-    @Body() updateUserImageDto: UpdateUserImageDto,
     @UploadedFile() file: Express.Multer.File,
   ) {
     return this.usersService.updateProfilePicture(user.userId, file);
@@ -59,6 +58,7 @@ export class UsersController {
     return this.usersService.updateUser(id, notificationSettings);
   }
 
+  @Put('')
   @ApiOperation({ summary: 'Update user information' })
   @ApiResponse({
     status: 200,
@@ -90,11 +90,11 @@ export class UsersController {
     return this.usersService.completeOnboarding(user.userId, onboardingData);
   }
 
+  @Delete(':id')
   @ApiOperation({ summary: 'Delete user' })
   @ApiResponse({ status: 200, description: 'User deleted successfully' })
   @ApiResponse({ status: 404, description: 'User not found' })
   @ApiParam({ name: 'id', description: 'User ID' })
-  @Delete(':id')
   async deleteUser(@Param('id') id: string) {
     return this.usersService.deleteUser(id);
   }
