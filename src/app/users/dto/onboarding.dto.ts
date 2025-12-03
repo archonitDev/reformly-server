@@ -108,5 +108,14 @@ export class OnboardingDto {
   @IsString()
   @IsNotEmpty()
   username: string;
+
+  @ApiProperty({
+    description: 'Bio',
+    example: 'I am a fitness enthusiast',
+    type: String,
+  })
+  @IsString()
+  @IsNotEmpty()
+  bio: string;
 }
 

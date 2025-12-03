@@ -245,6 +245,7 @@ export class UsersService {
         weightUnit: onboardingData.weightUnit,
         dateOfBirth: new Date(onboardingData.dateOfBirth),
         mainGoal: onboardingData.mainGoal,
+        bio: onboardingData.bio,
         username: onboardingData.username,
         activities: {
           set: onboardingData.activities,
