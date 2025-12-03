@@ -46,6 +46,8 @@ enum NotificationType {
   POST_LIKED     @map("post_liked")
   POST_COMMENTED @map("post_commented")
   COMMENT_LIKED  @map("comment_liked")
+  USER_MENTIONED @map("user_mentioned")
+  EVERYONE_MENTIONED @map("everyone_mentioned")
 }
 
 enum PointSource {

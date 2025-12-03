@@ -5,6 +5,7 @@ import { NotificationType } from '@prisma/client';
 import { PrismaService } from '@libs/prisma/prisma.service';
 import { ConfigService } from '@nestjs/config';
 import * as firebase from 'firebase-admin';
+import { UsersService } from '@app/users/users.service';
 
 @Injectable()
 export class NotificationsService {
@@ -12,6 +13,7 @@ export class NotificationsService {
     private notificationsRepository: NotificationsRepository,
     private readonly configService: ConfigService,
     private prisma: PrismaService,
+    private usersService: UsersService,
   ) {
     const firebaseCredentials = this.configService.get('firebase.credential');
     firebase.initializeApp({
@@ -34,6 +36,68 @@ export class NotificationsService {
     } catch (error) {
       console.log('error', error);
     }
+  }
+
+  async notifyDirectMentions(
+    authorId: string,
+    postId: string,
+    usernames: string[],
+    commentId?: string,
+  ): Promise<void> {
+    if (!usernames.length) {
+      return;
+    }
+
+    const mentionedUsers = await this.usersService.findByUsernames(usernames);
+
+    const recipients = mentionedUsers.filter(
+      (user) => user && user.id !== authorId,
+    );
+
+    if (!recipients.length) {
+      return;
+    }
+
+    await Promise.all(
+      recipients.map((user) =>
+        this.createMentionNotification(user.id, authorId, postId, commentId),
+      ),
+    );
+  }
+
+  async notifyEveryoneMention(
+    authorId: string,
+    postId: string,
+    excludedUsernames: string[],
+  ): Promise<void> {
+    const allOtherUsers = await this.usersService.findAllExcept(authorId);
+
+    if (!allOtherUsers.length) {
+      return;
+    }
+
+    const excluded = new Set(excludedUsernames);
+
+    // Everyone except the author and anyone explicitly mentioned by @username
+    const recipients = allOtherUsers.filter(
+      (user) => user && !excluded.has(user.username),
+    );
+
+    if (!recipients.length) {
+      return;
+    }
+
+    await Promise.all(
+      recipients.map((user) =>
+        this.createMentionNotification(
+          user.id,
+          authorId,
+          postId,
+          undefined,
+          { isEveryone: true },
+        ),
+      ),
+    );
   }
 
   async createLikeNotification(
@@ -99,6 +163,46 @@ export class NotificationsService {
     const notification = await this.notificationsRepository.create({
       type: NotificationType.COMMENT_LIKED,
       message: `${sender.name} ${sender.lastName} liked your comment`,
+      user: {
+        connect: { id: userId },
+      },
+      sender: {
+        connect: { id: senderId },
+      },
+      postId,
+      commentId,
+    });
+
+    return this.mapToResponseDto(notification);
+  }
+
+  async createMentionNotification(
+    userId: string,
+    senderId: string,
+    postId: string,
+    commentId?: string,
+    options?: { isEveryone?: boolean },
+  ): Promise<NotificationResponseDto> {
+    const sender = await this.prisma.user.findUnique({
+      where: { id: senderId },
+    });
+
+    const type = options?.isEveryone
+      ? NotificationType.EVERYONE_MENTIONED
+      : NotificationType.USER_MENTIONED;
+
+    let message: string;
+    if (options?.isEveryone) {
+      message = `${sender.name} ${sender.lastName} mentioned everyone in a post`;
+    } else if (commentId) {
+      message = `${sender.name} ${sender.lastName} mentioned you in a comment`;
+    } else {
+      message = `${sender.name} ${sender.lastName} mentioned you in a post`;
+    }
+
+    const notification = await this.notificationsRepository.create({
+      type,
+      message,
       user: {
         connect: { id: userId },
       },

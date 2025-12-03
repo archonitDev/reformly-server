@@ -8,9 +8,10 @@ import { LikesModule } from '@app/likes/likes.module';
 import { PostsService } from '@app/posts/posts.service';
 import { PostsModule } from '@app/posts/posts.module';
 import { LeaderboardModule } from '@app/leaderboard/leaderboard.module';
+import { UsersModule } from '@app/users/users.module';
 
 @Module({
-  imports: [PrismaModule, NotificationsModule, LikesModule, PostsModule, LeaderboardModule],
+  imports: [PrismaModule, NotificationsModule, LikesModule, PostsModule, LeaderboardModule, UsersModule],
   controllers: [CommentsController],
   providers: [CommentsService, CommentsRepository],
   exports: [CommentsService, CommentsRepository],

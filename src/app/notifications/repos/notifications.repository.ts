@@ -41,6 +41,7 @@ export class NotificationsRepository {
     params?: { skip?: number; take?: number; isRead?: boolean },
   ) {
     const where: Prisma.NotificationWhereInput = { userId };
+
     if (params?.isRead !== undefined) {
       where.isRead = params.isRead;
     }

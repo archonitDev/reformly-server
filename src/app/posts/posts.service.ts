@@ -4,10 +4,17 @@ import { CreatePostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
 import { Post, Prisma } from '@prisma/client';
 import { StorageService } from '@libs/storage/storage.service';
+import { NotificationsService } from '@app/notifications/notifications.service';
+import { parseMentions } from '@common/utils/mentions/parse-mentions.utils';
+import { PostSort, PostSortType } from './types/post-sort.type';
 
 @Injectable()
 export class PostsService {
-  constructor(private postsRepository: PostsRepository, private storageService: StorageService) {}
+  constructor(
+    private postsRepository: PostsRepository,
+    private storageService: StorageService,
+    private notificationsService: NotificationsService,
+  ) {}
 
   async create(userId: string, createPostDto: CreatePostDto, file: Express.Multer.File): Promise<Post> {
     if (file) {
@@ -26,12 +33,31 @@ export class PostsService {
       },
     });
 
+    const { usernames, everyone } = parseMentions(createPostDto.content);
+
+    // Handle @username mentions
+    await this.notificationsService.notifyDirectMentions(
+      userId,
+      post.id,
+      usernames,
+    );
+
+    // Handle @everyone (excluding already-mentioned users)
+    if (everyone) {
+      await this.notificationsService.notifyEveryoneMention(
+        userId,
+        post.id,
+        usernames,
+      );
+    }
+
     return post;
   }
 
   async findAll(
     page: number = 1,
     limit: number = 20,
+    sort: PostSortType,
     userId?: string,
   ): Promise<{
     posts: Post[];
@@ -41,12 +67,14 @@ export class PostsService {
   }> {
     const skip = (page - 1) * limit;
     const where: Prisma.PostWhereInput = userId ? { authorId: userId } : {};
-
+  
+    const orderByDate: Prisma.PostOrderByWithRelationInput = sort === PostSort.NEWEST ? { createdAt: 'desc' } : { createdAt: 'asc' };
+  
     const [posts, total] = await Promise.all([
       this.postsRepository.findMany({
         skip,
         take: limit,
-        orderBy: [{ isPinned: 'desc' }, { createdAt: 'desc' }],
+        orderBy: [{ isPinned: 'desc' }, orderByDate],
         where,
       }),
       this.postsRepository.count(),

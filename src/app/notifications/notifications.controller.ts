@@ -7,6 +7,7 @@ import {
   Query,
   HttpCode,
   HttpStatus,
+  ParseBoolPipe,
 } from '@nestjs/common';
 import { NotificationsService } from './notifications.service';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
@@ -22,7 +23,10 @@ export class NotificationsController {
 
   @Get()
   @ApiOperation({ summary: 'Get user notifications' })
-  @ApiResponse({ status: 200, description: 'Notifications retrieved successfully' })
+  @ApiResponse({
+    status: 200,
+    description: 'Notifications retrieved successfully',
+  })
   @ApiQuery({ name: 'page', required: false, type: Number, example: 1 })
   @ApiQuery({ name: 'limit', required: false, type: Number, example: 50 })
   @ApiQuery({ name: 'isRead', required: false, type: Boolean })
@@ -30,7 +34,7 @@ export class NotificationsController {
     @GetCurrentUser() user: AuthUser,
     @Query('page') page?: number,
     @Query('limit') limit?: number,
-    @Query('isRead') isRead?: boolean,
+    @Query('isRead', ParseBoolPipe) isRead?: boolean,
   ) {
     return this.notificationsService.getNotifications(
       user.userId,
@@ -61,15 +65,24 @@ export class NotificationsController {
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({ summary: 'Delete a notification' })
-  @ApiResponse({ status: 204, description: 'Notification deleted successfully' })
-  deleteNotification(@Param('id') id: string, @GetCurrentUser() user: AuthUser) {
+  @ApiResponse({
+    status: 204,
+    description: 'Notification deleted successfully',
+  })
+  deleteNotification(
+    @Param('id') id: string,
+    @GetCurrentUser() user: AuthUser,
+  ) {
     return this.notificationsService.deleteNotification(id, user.userId);
   }
 
   @Delete()
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Delete all notifications' })
-  @ApiResponse({ status: 200, description: 'All notifications deleted successfully' })
+  @ApiResponse({
+    status: 200,
+    description: 'All notifications deleted successfully',
+  })
   deleteAllNotifications(@GetCurrentUser() user: AuthUser) {
     return this.notificationsService.deleteAllNotifications(user.userId);
   }

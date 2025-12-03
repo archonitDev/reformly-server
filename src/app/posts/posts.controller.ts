@@ -20,6 +20,7 @@ import { GetCurrentUser } from '@libs/security/decorators/get-current-user.decor
 import { AuthUser } from '@common/interfaces/auth-user.interface';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { memoryStorage } from 'multer';
+import { PostSort, PostSortType } from './types/post-sort.type';
 
 @Controller('posts')
 @ApiBearerAuth()
@@ -54,8 +55,9 @@ export class PostsController {
   })
   @ApiQuery({ name: 'page', required: false, type: Number, example: 1 })
   @ApiQuery({ name: 'limit', required: false, type: Number, example: 20 })
-  findAll(@Query('page') page?: number, @Query('limit') limit?: number) {
-    return this.postsService.findAll(page ? +page : 1, limit ? +limit : 20);
+  @ApiQuery({ name: 'sort', required: false, enum: PostSort, example: PostSort.NEWEST })
+  findAll(@Query('page') page?: number, @Query('limit') limit?: number, @Query('sort') sort?: PostSortType) {
+    return this.postsService.findAll(page ? +page : 1, limit ? +limit : 20, sort);
   }
 
   @Get(':id')

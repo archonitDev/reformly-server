@@ -6,6 +6,7 @@ import { NotificationsService } from '@app/notifications/notifications.service';
 import { Comment, PointSource } from '@prisma/client';
 import { PostsService } from '@app/posts/posts.service';
 import { LeaderboardService } from '@app/leaderboard/leaderboard.service';
+import { parseMentions } from '@common/utils/mentions/parse-mentions.utils';
 
 @Injectable()
 export class CommentsService {
@@ -16,19 +17,17 @@ export class CommentsService {
     private leaderboardService: LeaderboardService,
   ) {}
 
-
-
   async createComment(
     postId: string,
     userId: string,
     createCommentDto: CreateCommentDto,
   ): Promise<Comment> {
     const post = await this.postService.findOne(postId);
-  
+
     if (!post) {
       throw new NotFoundException('Post not found');
     }
-  
+
     const comment = await this.commentsRepository.create({
       content: createCommentDto.content,
       post: {
@@ -55,6 +54,23 @@ export class CommentsService {
       ]);
     }
 
+    const { usernames, everyone } = parseMentions(createCommentDto.content);
+
+    await this.notificationsService.notifyDirectMentions(
+      userId,
+      postId,
+      usernames,
+      comment.id,
+    );
+
+    if (everyone) {
+      await this.notificationsService.notifyEveryoneMention(
+        userId,
+        postId,
+        usernames,
+      );
+    }
+
     return comment;
   }
 
@@ -75,7 +91,9 @@ export class CommentsService {
     }
 
     if (parentComment.postId !== postId) {
-      throw new ForbiddenException('Parent comment does not belong to this post');
+      throw new ForbiddenException(
+        'Parent comment does not belong to this post',
+      );
     }
 
     const comment = await this.commentsRepository.create({
@@ -107,6 +125,23 @@ export class CommentsService {
       ]);
     }
 
+    const { usernames, everyone } = parseMentions(createCommentDto.content);
+
+    await this.notificationsService.notifyDirectMentions(
+      userId,
+      postId,
+      usernames,
+      comment.id,
+    );
+
+    if (everyone) {
+      await this.notificationsService.notifyEveryoneMention(
+        userId,
+        postId,
+        usernames,
+      );
+    }
+
     return comment;
   }
 
@@ -127,7 +162,6 @@ export class CommentsService {
       this.commentsRepository.count(postId),
     ]);
 
-
     return {
       comments: topLevelComments,
       total,
@@ -136,14 +170,13 @@ export class CommentsService {
     };
   }
 
-  async getReplies(
-    commentId: string,
-    page: number = 1,
-    limit: number = 50,
-  ) {
+  async getReplies(commentId: string, page: number = 1, limit: number = 50) {
     const skip = (page - 1) * limit;
 
-    const comment = await this.commentsRepository.findById(commentId, { skip, take: limit });
+    const comment = await this.commentsRepository.findById(commentId, {
+      skip,
+      take: limit,
+    });
     if (!comment) {
       throw new NotFoundException('Comment not found');
     }
@@ -188,4 +221,3 @@ export class CommentsService {
     await this.commentsRepository.delete(id);
   }
 }
-
