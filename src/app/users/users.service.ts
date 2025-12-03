@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Injectable,
   InternalServerErrorException,
   Logger,
@@ -15,6 +16,8 @@ import { StorageService } from '@libs/storage/storage.service';
 
 const userSelect: Prisma.UserSelect = {
   id: true,
+  username: true,
+  bio: true,
   email: true,
   name: true,
   lastName: true,
@@ -39,6 +42,16 @@ export class UsersService {
   private readonly logger = new Logger(UsersService.name);
 
   constructor(private readonly usersRepository: UsersRepository, private readonly storageService: StorageService) {}
+
+  async checkUsername(username: string) {
+    const user = await this.usersRepository.findUnique({ username }, userSelect);
+
+    if (user) {
+      return {available: false, message: 'Username is already taken'};
+    }
+
+    return {available: true, message: 'Username is available'};
+  }
 
   async updateProfilePicture(id: string, file: Express.Multer.File) {
     const user = await this.usersRepository.findOneById(id);
@@ -76,6 +89,14 @@ export class UsersService {
 
   async findByEmail(email: string): Promise<User | null> {
     return this.usersRepository.findUnique({ email }, userSelect);
+  }
+
+  async findByUsernames(usernames: string[]): Promise<User[]> {
+    return this.usersRepository.findManyByUsernames(usernames);
+  }
+
+  async findAllExcept(userId: string): Promise<User[]> {
+    return this.usersRepository.findAllExcept(userId);
   }
 
   /**
@@ -224,6 +245,7 @@ export class UsersService {
         weightUnit: onboardingData.weightUnit,
         dateOfBirth: new Date(onboardingData.dateOfBirth),
         mainGoal: onboardingData.mainGoal,
+        username: onboardingData.username,
         activities: {
           set: onboardingData.activities,
         },

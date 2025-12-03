@@ -66,4 +66,28 @@ export class UsersRepository {
   async deleteUser(id: string): Promise<User> {
     return await this.prisma.user.delete({ where: { id } });
   }
+
+  async findManyByUsernames(usernames: string[]): Promise<User[]> {
+    if (!usernames.length) {
+      return [];
+    }
+
+    return this.prisma.user.findMany({
+      where: {
+        username: {
+          in: usernames,
+        },
+      },
+    });
+  }
+
+  async findAllExcept(userId: string): Promise<User[]> {
+    return this.prisma.user.findMany({
+      where: {
+        id: {
+          not: userId,
+        },
+      },
+    });
+  }
 }

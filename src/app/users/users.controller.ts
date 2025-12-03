@@ -1,4 +1,4 @@
-import { Controller, Put, Param, Body, Post, HttpCode, HttpStatus, Delete, UploadedFile, UseInterceptors } from '@nestjs/common';
+import { Controller, Put, Param, Body, Post, HttpCode, HttpStatus, Delete, UploadedFile, UseInterceptors, Query, Get } from '@nestjs/common';
 import { UsersService } from './users.service';
 import {
   ApiOperation,
@@ -22,6 +22,15 @@ import { NotificationSettingsDto } from './dto/notification-settings.dto';
 @Controller('users')
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
+
+
+  @Get('check-username')
+  @ApiOperation({ summary: 'Check if username is available' })
+  @ApiResponse({ status: 200, description: 'Username is available' })
+  @ApiResponse({ status: 400, description: 'Username is already taken' })
+  checkUsername(@Query('username') username: string) {
+    return this.usersService.checkUsername(username);
+  }
 
   @Post('profile-picture')
   @ApiOperation({ summary: 'Update user profile picture' })

@@ -10,6 +10,8 @@ import {
   Min,
   Max,
   ArrayMaxSize,
+  IsString,
+  IsNotEmpty,
 } from 'class-validator';
 import { Gender, MainGoal, Activity, HeightUnit, WeightUnit } from '@prisma/client';
 
@@ -97,5 +99,14 @@ export class OnboardingDto {
   @Min(20)
   @Max(500)
   goalWeight: number;
+
+  @ApiProperty({
+    description: 'Username',
+    example: 'john_doe',
+    type: String,
+  })
+  @IsString()
+  @IsNotEmpty()
+  username: string;
 }
 
