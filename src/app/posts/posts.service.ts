@@ -68,13 +68,21 @@ export class PostsService {
     const skip = (page - 1) * limit;
     const where: Prisma.PostWhereInput = userId ? { authorId: userId } : {};
   
-    const orderByDate: Prisma.PostOrderByWithRelationInput = sort === PostSort.NEWEST ? { createdAt: 'desc' } : { createdAt: 'asc' };
+    const orderBy: Prisma.PostOrderByWithRelationInput[] = [{ isPinned: 'desc' }];
+
+    if (sort === PostSort.RECENTLY_COMMENTED) {
+      orderBy.push({ lastCommentAt: { sort: 'desc', nulls: 'last' } });
+    } else if (sort === PostSort.OLDEST) {
+      orderBy.push({ createdAt: 'asc' });
+    } else {
+      orderBy.push({ createdAt: 'desc' });
+    }
   
     const [posts, total] = await Promise.all([
       this.postsRepository.findMany({
         skip,
         take: limit,
-        orderBy: [{ isPinned: 'desc' }, orderByDate],
+        orderBy,
         where,
       }),
       this.postsRepository.count(),
@@ -149,6 +157,10 @@ export class PostsService {
     );
 
     return updatedPost;
+  }
+
+  async updateLastCommentAt(id: string, date: Date): Promise<void> {
+    await this.postsRepository.update(id, { lastCommentAt: date });
   }
 }
 

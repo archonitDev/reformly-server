@@ -11,6 +11,7 @@ export class CommentsRepository {
     name: true,
     lastName: true,
     email: true,
+    username: true,
   };
 
   private readonly countSelect = {

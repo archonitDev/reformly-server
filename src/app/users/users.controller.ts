@@ -16,6 +16,7 @@ import { UserDto } from './dto/user.dto';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { memoryStorage } from 'multer';
 import { NotificationSettingsDto } from './dto/notification-settings.dto';
+import { FileUrlDto } from './dto/file-url.dto';
 
 @ApiTags('Users')
 @ApiBearerAuth()
@@ -38,7 +39,6 @@ export class UsersController {
     status: 201,
     description: 'Profile picture updated successfully',
   })
-  @ApiBody({ schema: { type: 'object', properties: { image: { type: 'string', format: 'binary' } } } })
   @ApiConsumes('multipart/form-data')
   @UseInterceptors(
     FileInterceptor('image', {
@@ -46,11 +46,13 @@ export class UsersController {
       limits: { fileSize: 200 * 1024 * 1024 },
     }),
   )
+  @ApiBody({ type: FileUrlDto })
   updateProfilePicture(
     @GetCurrentUser() user: AuthUser,
+    @Body() fileUrlData: FileUrlDto,
     @UploadedFile() file: Express.Multer.File,
   ) {
-    return this.usersService.updateProfilePicture(user.userId, file);
+    return this.usersService.updateProfilePicture(user.userId, fileUrlData, file);
   }
 
   @Post('notification-settings')

@@ -12,6 +12,7 @@ import * as admin from 'firebase-admin';
 import { parseFullName } from './utils/utils';
 import { OnboardingDto } from './dto/onboarding.dto';
 import { StorageService } from '@libs/storage/storage.service';
+import { FileUrlDto } from './dto/file-url.dto';
 
 
 const userSelect: Prisma.UserSelect = {
@@ -53,7 +54,7 @@ export class UsersService {
     return {available: true, message: 'Username is available'};
   }
 
-  async updateProfilePicture(id: string, file: Express.Multer.File) {
+  async updateProfilePicture(id: string, fileUrlData: FileUrlDto, file: Express.Multer.File) {
     const user = await this.usersRepository.findOneById(id);
 
     if (!user) {
@@ -62,16 +63,20 @@ export class UsersService {
         errorCode: ErrorCodes.NotExists_User,
       });
     }
+    
+    if (file) {
+      const { url } = await this.storageService.uploadObject({
+        key: `users/${id}/${file.originalname.replace(' ', '_')}`,
+        body: file.buffer,
+        contentType: file.mimetype,
+      });
 
-    const { url } = await this.storageService.uploadObject({
-      key: `users/${id}/${file.originalname.replace(' ', '_')}`,
-      body: file.buffer,
-      contentType: file.mimetype,
-    });
+      fileUrlData.fileUrl = url;
+    }
 
-    await this.usersRepository.updateUser(id, { profilePictureUrl: url });
+    await this.usersRepository.updateUser(id, { profilePictureUrl: fileUrlData.fileUrl });
 
-    return url;
+    return fileUrlData.fileUrl;
   }
 
   async findById(id: string) {

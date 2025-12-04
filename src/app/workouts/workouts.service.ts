@@ -3,6 +3,8 @@ import { WorkoutsRepository } from './repos/workouts.repository';
 import { WorkoutCompletionsRepository } from './repos/workout-completions.repository';
 import { WorkoutLikesRepository } from './repos/workout-likes.repository';
 import { WorkoutResponseDto } from './dto/workout-response.dto';
+import { WorkoutProgramResponseDto } from '@app/programs/dto/workout-program-response.dto';
+import { PrismaService } from '@libs/prisma/prisma.service';
 
 @Injectable()
 export class WorkoutsService {
@@ -10,7 +12,65 @@ export class WorkoutsService {
     private workoutsRepository: WorkoutsRepository,
     private workoutCompletionsRepository: WorkoutCompletionsRepository,
     private workoutLikesRepository: WorkoutLikesRepository,
+    private prisma: PrismaService,
   ) {}
+
+  async getRecentPrograms(
+    userId: string,
+    page: number = 1,
+    limit: number = 20,
+  ): Promise<{
+    data: WorkoutProgramResponseDto[];
+    page: number;
+  }> {
+    const skip = (page - 1) * limit;
+    const programIds =
+      await this.workoutCompletionsRepository.findMostRecentProgramIds(
+        userId,
+        skip,
+        limit,
+      );
+
+    const programs = await this.prisma.workoutProgram.findMany({
+      where: {
+        id: { in: programIds },
+      },
+      include: {
+        _count: {
+          select: { workouts: true },
+        },
+      },
+    });
+
+
+    const programsWithProgress = await Promise.all(
+      programs.map(async (program) => {
+        const completedWorkouts =
+          await this.workoutCompletionsRepository.countAmountByProgramId(
+            program.id,
+            userId,
+          );
+        const workoutCount = program._count.workouts;
+        const progressPercentage =
+          workoutCount > 0
+            ? Math.round((completedWorkouts / workoutCount) * 100)
+            : 0;
+
+        const { _count, ...rest } = program;
+        return {
+          ...rest,
+          workoutCount,
+          completedWorkouts,
+          progressPercentage,
+        };
+      }),
+    );
+
+    return {
+      data: programsWithProgress,
+      page,
+    };
+  }
 
   async getWorkoutById(workoutId: string, userId: string): Promise<WorkoutResponseDto> {
     const workout = await this.workoutsRepository.findById(workoutId);

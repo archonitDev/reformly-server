@@ -49,7 +49,7 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Logout user' })
   @ApiResponse({ status: 200, description: 'Logout successful' })
-  async logout(@Body('userId') userId: string) {
-    return this.authService.logout(userId);
+  async logout(@GetCurrentUser() user: AuthUser ) {
+    return this.authService.logout(user.userId);
   }
 }

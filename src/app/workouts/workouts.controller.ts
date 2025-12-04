@@ -13,6 +13,7 @@ import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiQuery } from '@ne
 import { GetCurrentUser } from '@libs/security/decorators/get-current-user.decorator';
 import { AuthUser } from '@common/interfaces/auth-user.interface';
 import { WorkoutResponseDto } from './dto/workout-response.dto';
+import { WorkoutProgramResponseDto } from '@app/programs/dto/workout-program-response.dto';
 
 @Controller('workouts')
 @ApiBearerAuth()
@@ -35,6 +36,27 @@ export class WorkoutsController {
     @Query('limit') limit?: number,
   ) {
     return this.workoutsService.getLikedWorkouts(
+      user.userId,
+      page ? +page : 1,
+      limit ? +limit : 20,
+    );
+  }
+
+  @Get('recent-programs')
+  @ApiOperation({ summary: "Get user's most recent followed programs" })
+  @ApiResponse({
+    status: 200,
+    description: 'Recent programs retrieved successfully',
+    type: [WorkoutProgramResponseDto],
+  })
+  @ApiQuery({ name: 'page', required: false, type: Number, example: 1 })
+  @ApiQuery({ name: 'limit', required: false, type: Number, example: 20 })
+  getRecentPrograms(
+    @GetCurrentUser() user: AuthUser,
+    @Query('page') page?: number,
+    @Query('limit') limit?: number,
+  ) {
+    return this.workoutsService.getRecentPrograms(
       user.userId,
       page ? +page : 1,
       limit ? +limit : 20,

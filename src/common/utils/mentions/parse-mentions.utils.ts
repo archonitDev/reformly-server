@@ -10,7 +10,7 @@ export type MentionsParseResult = {
  * - unique usernames mentioned via @username
  * - whether @everyone was used at least once
  */
-export function parseMentions(content: string): MentionsParseResult {
+export function parseMentions(content: string, excludeUsernames?: string[]): MentionsParseResult {
   const usernamesSet = new Set<string>();
   let everyone = false;
   let match: RegExpExecArray | null;
@@ -22,7 +22,9 @@ export function parseMentions(content: string): MentionsParseResult {
     if (tag.toLowerCase() === 'everyone') {
       everyone = true;
     } else {
-      usernamesSet.add(tag);
+      if (!excludeUsernames || !excludeUsernames.includes(tag)) {
+        usernamesSet.add(tag);
+      }
     }
   }
 

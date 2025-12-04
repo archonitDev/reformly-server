@@ -38,21 +38,29 @@ export class CommentsService {
       },
     });
 
+    const promises: Promise<any>[] = [
+      this.postService.updateLastCommentAt(postId, new Date()),
+    ];
+
     if (post?.authorId && post?.authorId !== userId) {
-      await Promise.all([
+      promises.push(
         this.notificationsService.createCommentNotification(
           post.authorId,
           userId,
           postId,
           comment.id,
         ),
+      );
+      promises.push(
         this.leaderboardService.recordPoints(
           post.authorId,
           1,
           PointSource.COMMENT_ON_POST,
         ),
-      ]);
+      );
     }
+
+    await Promise.all(promises);
 
     const { usernames, everyone } = parseMentions(createCommentDto.content);
 
@@ -96,6 +104,21 @@ export class CommentsService {
       );
     }
 
+    let parentId = commentId;
+    const replyToUser = parentComment.author;
+
+    // If responding to a reply, flatten the structure
+    if (parentComment?.parentCommentId) {
+      parentId = parentComment.parentCommentId;
+      // Ensure the content mentions the user we are replying to
+      if (
+        replyToUser.username &&
+        !createCommentDto.content.startsWith(`@${replyToUser.username}`)
+      ) {
+        createCommentDto.content = `@${replyToUser.username} ${createCommentDto.content}`;
+      }
+    }
+
     const comment = await this.commentsRepository.create({
       content: createCommentDto.content,
       post: {
@@ -105,27 +128,43 @@ export class CommentsService {
         connect: { id: userId },
       },
       parentComment: {
-        connect: { id: commentId },
+        connect: { id: parentId },
       },
     });
 
-    if (parentComment.authorId !== userId) {
-      await Promise.all([
-        this.notificationsService.createCommentNotification(
-          parentComment.authorId,
-          userId,
-          postId,
-          comment.id,
-        ),
+    const promises: Promise<any>[] = [
+      this.postService.updateLastCommentAt(postId, new Date()),
+    ];
+
+    // If replying to the root comment directly (depth 1), send a reply notification.
+    // If replying to a reply (depth > 1), the @mention handles the notification.
+    const isDepth1 = !parentComment.parentCommentId;
+
+    if (replyToUser.id !== userId) {
+      if (isDepth1) {
+        promises.push(
+          this.notificationsService.createReplyNotification(
+            replyToUser.id,
+            userId,
+            postId,
+            comment.id,
+          ),
+        );
+      }
+      
+      // Record points for the reply regardless of depth
+      promises.push(
         this.leaderboardService.recordPoints(
-          parentComment.authorId,
+          replyToUser.id,
           1,
           PointSource.COMMENT_REPLY,
         ),
-      ]);
+      );
     }
 
-    const { usernames, everyone } = parseMentions(createCommentDto.content);
+    await Promise.all(promises);
+
+    const { usernames, everyone } = parseMentions(createCommentDto.content, [replyToUser.username]);
 
     await this.notificationsService.notifyDirectMentions(
       userId,

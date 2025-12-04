@@ -150,6 +150,32 @@ export class NotificationsService {
     return this.mapToResponseDto(notification);
   }
 
+  async createReplyNotification(
+    userId: string,
+    senderId: string,
+    postId: string,
+    commentId: string,
+  ): Promise<NotificationResponseDto> {
+    const sender = await this.prisma.user.findUnique({
+      where: { id: senderId },
+    });
+
+    const notification = await this.notificationsRepository.create({
+      type: NotificationType.POST_COMMENTED,
+      message: `${sender.name} ${sender.lastName} replied to your comment`,
+      user: {
+        connect: { id: userId },
+      },
+      sender: {
+        connect: { id: senderId },
+      },
+      postId,
+      commentId,
+    });
+
+    return this.mapToResponseDto(notification);
+  }
+
   async createCommentLikeNotification(
     userId: string,
     senderId: string,

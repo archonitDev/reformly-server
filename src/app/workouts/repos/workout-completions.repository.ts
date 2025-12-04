@@ -84,5 +84,22 @@ export class WorkoutCompletionsRepository {
       },
     });
   }
+
+  async findMostRecentProgramIds(
+    userId: string,
+    skip: number,
+    take: number,
+  ): Promise<string[]> {
+    const result = await this.prisma.$queryRaw<{ programId: string }[]>`
+      SELECT w."programId"
+      FROM "WorkoutCompletion" wc
+      JOIN "Workout" w ON wc."workoutId" = w.id
+      WHERE wc."userId" = ${userId}::uuid
+      GROUP BY w."programId"
+      ORDER BY MAX(wc."completedAt") DESC
+      LIMIT ${take} OFFSET ${skip}
+    `;
+    return result.map((r) => r.programId);
+  }
 }
 
