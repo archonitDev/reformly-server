@@ -26,6 +26,8 @@ const userSelect: Prisma.UserSelect = {
   role: true,
   dateOfBirth: true,
   mainGoal: true,
+  weightUnit: true,
+  heightUnit: true,
   activities: true,
   height: true,
   currentWeight: true,
